@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox Lua — Learn</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0e1117;
+    --sidebar:   #13161e;
+    --panel:     #181c27;
+    --card:      #1e2333;
+    --border:    #252b3b;
+    --accent:    #e8423a;
+    --accent2:   #f07c3c;
+    --blue:      #4dabf7;
+    --green:     #69db7c;
+    --yellow:    #ffd43b;
+    --purple:    #b197fc;
+    --text:      #e2e8f0;
+    --muted:     #8892a4;
+    --dim:       #3d4558;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Inter', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    overflow: hidden;
+  }
+
+  /* ── LAYOUT ── */
+  #app {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 48px 1fr;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── TOPBAR ── */
+  #topbar {
+    grid-column: 1 / -1;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    gap: 14px;
+    user-select: none;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .04em;
+  }
+  .logo-icon {
+    width: 26px; height: 26px;
+    background: var(--accent);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .logo-title { color: var(--text); }
+  .logo-sub { color: var(--muted); font-weight: 400; }
+  .topbar-sep { flex: 1; }
+  .badge {
+    background: var(--dim);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    letter-spacing: .06em;
+  }
+  .badge.lua { background: #1a2744; color: var(--blue); }
+  .progress-wrap {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--muted); font-family: var(--mono);
+  }
+  .progress-bar {
+    width: 90px; height: 5px;
+    background: var(--dim);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    transition: width .4s ease;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 10px 0;
+  }
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+  .section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    color: var(--dim);
+    padding: 12px 16px 4px;
+    text-transform: uppercase;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 16px;
+    cursor: pointer;
+    border-radius: 0;
+    font-size: 12.5px;
+    color: var(--muted);
+    transition: background .15s, color .15s;
+    border-left: 2px solid transparent;
+    user-select: none;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.04); color: var(--text); }
+  .nav-item.active {
+    background: rgba(232,66,58,.08);
+    color: var(--text);
+    border-left-color: var(--accent);
+  }
+  .nav-item .icon { font-size: 13px; width: 16px; text-align: center; flex-shrink: 0; }
+  .nav-item .done {
+    margin-left: auto;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--green);
+    display: none;
+    align-items: center; justify-content: center;
+    font-size: 9px; color: #000;
+  }
+  .nav-item.done-item .done { display: flex; }
+
+  /* ── MAIN ── */
+  #main {
+    overflow-y: auto;
+    background: var(--panel);
+    padding: 28px 36px;
+  }
+  #main::-webkit-scrollbar { width: 6px; }
+  #main::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 3px; }
+
+  .lesson { display: none; }
+  .lesson.active { display: block; }
+
+  /* ── LESSON CONTENT ── */
+  .lesson-header {
+    display: flex; align-items: flex-start; gap: 14px;
+    margin-bottom: 24px;
+  }
+  .lesson-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(232,66,58,.12);
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .lesson-title {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .lesson-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  p { color: var(--muted); line-height: 1.75; margin-bottom: 14px; }
+  p strong { color: var(--text); }
+
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 22px 0 10px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  h3::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* Code blocks */
+  .code-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 14px 0;
+    overflow: hidden;
+  }
+  .code-header {
+    display: flex; align-items: center;
+    padding: 7px 14px;
+    background: rgba(0,0,0,.25);
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+  .code-lang {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent2);
+    letter-spacing: .06em;
+    font-weight: 600;
+  }
+  .code-desc { font-size: 11px; color: var(--muted); }
+  pre {
+    padding: 16px 18px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+    color: var(--text);
+  }
+  pre::-webkit-scrollbar { height: 4px; }
+  pre::-webkit-scrollbar-thumb { background: var(--dim); }
+
+  /* Syntax highlight via spans */
+  .kw  { color: var(--purple); }
+  .fn  { color: var(--blue); }
+  .str { color: var(--green); }
+  .num { color: var(--yellow); }
+  .cm  { color: var(--dim); font-style: italic; }
+  .cls { color: var(--accent2); }
+  .op  { color: var(--muted); }
+  .prop{ color: #79c0ff; }
+
+  /* Info cards */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 6px;
+    letter-spacing: .04em;
+  }
+  .card p { margin: 0; font-size: 12px; }
+
+  /* Note boxes */
+  .note {
+    display: flex; gap: 12px;
+    background: rgba(77,171,247,.07);
+    border: 1px solid rgba(77,171,247,.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+  }
+  .note.warn {
+    background: rgba(255,212,59,.07);
+    border-color: rgba(255,212,59,.2);
+  }
+  .note.tip {
+    background: rgba(105,219,124,.07);
+    border-color: rgba(105,219,124,.2);
+  }
+  .note-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .note-body { font-size: 12.5px; color: var(--muted); line-height: 1.65; }
+  .note-body strong { color: var(--text); }
+
+  /* Table */
+  .tbl-wrap { overflow-x: auto; margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th {
+    background: var(--card);
+    color: var(--text);
+    font-weight: 600;
+    padding: 9px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+  }
+  td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  td code, th code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--blue);
+    background: rgba(77,171,247,.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* Nav buttons */
+  .lesson-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .15s;
+    font-family: var(--sans);
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #c93831; }
+  .btn-ghost { background: var(--card); color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); background: var(--dim); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* Tag pills */
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 18px; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+  .tag-r { background: rgba(177,151,252,.12); color: var(--purple); }
+  .tag-b { background: rgba(77,171,247,.12); color: var(--blue); }
+  .tag-g { background: rgba(105,219,124,.12); color: var(--green); }
+  .tag-y { background: rgba(255,212,59,.12); color: var(--yellow); }
+
+  /* Inline code */
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--blue);
+    background: rgba(77,171,247,.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* Mini grid for comparison */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+  .grid2-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+
+  /* Scrollbar for main */
+  #main::-webkit-scrollbar { width: 5px; }
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <div class="logo">
+      <div class="logo-icon">🧱</div>
+      <span class="logo-title">LuaRBX</span>
+      <span class="logo-sub">/ Learn</span>
+    </div>
+    <span class="badge lua">Luau · Roblox</span>
+    <div class="topbar-sep"></div>
+    <div class="progress-wrap">
+      <span id="prog-label">0 / 10</span>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="section-label">Foundations</div>
+    <div class="nav-item active" data-lesson="0">
+      <span class="icon">🚀</span> Intro to Luau
+      <span class="done">✓</span>
+    </div>
+    <div class="nav-item" data-lesson="1">
+      <span class="icon">📦</span> Variables & Types
+      <span class="done">✓</span>
+    </div>
+    <div class="nav-item" data-lesson="2">
+      <span class="icon">🔀</span> Control Flow
+      <span class="done">✓</span>
+    </div>
+    <div class="nav-item" data-lesson="3">
+      <span class="icon">🔧</span> Functions
+      <span class="done">✓</span>
+    </div>
+    <div class="nav-item" data-lesson="4">
+      <span class="icon">📋</span> Tables & Arrays
+      <span class="done">✓</span>
+    </div>
+    <div class="section-label">Roblox Core</div>
+    <div class="nav-item" data-lesson="5">
+      <span class="icon">🌐</span> Services & API
+      <span class="done">✓</span>
+    </div>
+    <div class="nav-item" data-lesson="6">
+      <span class="icon">🎮</span> Players & Characters
+      <span class="done">✓</span>
+    </div>
+    <div class="nav-item" data-lesson="7">
+      <span class="icon">📡</span> Remote Events
+      <span class="done">✓</span>
+    </div>
+    <div class="section-label">Advanced</div>
+    <div class="nav-item" data-lesson="8">
+      <span class="icon">⚡</span> Coroutines & Tasks
+      <span class="done">✓</span>
+    </div>
+    <div class="nav-item" data-lesson="9">
+      <span class="icon">🏗️</span> OOP & Modules
+      <span class="done">✓</span>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main id="main">
+
+    <!-- 0: Intro -->
+    <div class="lesson active" id="lesson-0">
+      <div class="lesson-header">
+        <span class="lesson-num">01</span>
+        <div>
+          <div class="lesson-title">Introduction to Luau</div>
+          <div class="lesson-sub">Roblox's typed extension of Lua 5.1</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">Luau</span>
+        <span class="tag tag-b">Roblox Studio</span>
+        <span class="tag tag-g">Beginner</span>
+      </div>
+      <p><strong>Luau</strong> is the scripting language used in Roblox. It's a fork of Lua 5.1 that Roblox has extended with optional static typing, better performance, and safer semantics. Every game mechanic — from moving parts to UI buttons to server logic — is powered by Luau scripts.</p>
+      <p>Scripts live inside Roblox's data model tree. There are three kinds you'll use constantly:</p>
+      <div class="cards">
+        <div class="card">
+          <div class="card-title">Script</div>
+          <p>Runs on the <strong>server</strong>. Handles game logic, data storage, and anything that should be authoritative.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">LocalScript</div>
+          <p>Runs on the <strong>client</strong>. Controls UI, camera, input, and visual effects for the player.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">ModuleScript</div>
+          <p>Returns a table of functions/values. <strong>Shared code</strong> imported by other scripts via <code>require()</code>.</p>
+        </div>
+      </div>
+      <h3>Your First Script</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">ServerScript — Hello World</span></div>
+        <pre><span class="cm">-- This is a comment</span>
+<span class="fn">print</span>(<span class="str">"Hello, Roblox!"</span>)
+
+<span class="cm">-- Variables use local keyword</span>
+<span class="kw">local</span> playerName <span class="op">=</span> <span class="str">"Player1"</span>
+<span class="fn">print</span>(<span class="str">"Welcome, "</span> <span class="op">..</span> playerName)</pre>
+      </div>
+      <div class="note">
+        <span class="note-icon">ℹ️</span>
+        <div class="note-body"><strong>String concatenation</strong> in Lua uses <code>..</code> (two dots), not <code>+</code>. This trips up most beginners coming from other languages.</div>
+      </div>
+      <h3>Luau vs Standard Lua</h3>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Feature</th><th>Lua 5.1</th><th>Luau (Roblox)</th></tr>
+          <tr><td>Optional types</td><td>❌ None</td><td>✅ <code>local x: number = 5</code></td></tr>
+          <tr><td>String interpolation</td><td>❌</td><td>✅ <code>\`Hello {name}\`</code></td></tr>
+          <tr><td>Compound assign</td><td>❌</td><td>✅ <code>x += 1</code></td></tr>
+          <tr><td>Type checking</td><td>Runtime only</td><td>Optional static analysis</td></tr>
+          <tr><td>Performance</td><td>Standard</td><td>Optimized JIT-like VM</td></tr>
+        </table>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" disabled>← Previous</button>
+        <button class="btn btn-primary" onclick="goLesson(1)">Variables & Types →</button>
+      </div>
+    </div>
+
+    <!-- 1: Variables & Types -->
+    <div class="lesson" id="lesson-1">
+      <div class="lesson-header">
+        <span class="lesson-num">02</span>
+        <div>
+          <div class="lesson-title">Variables & Types</div>
+          <div class="lesson-sub">Storing and working with data in Luau</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">Types</span><span class="tag tag-b">Variables</span><span class="tag tag-g">Beginner</span>
+      </div>
+      <p>Luau is <strong>dynamically typed</strong> by default — variables hold any type. You can optionally annotate types for tooling and safety.</p>
+      <h3>The Basic Types</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">All core types</span></div>
+        <pre><span class="kw">local</span> score<span class="op">:</span> <span class="cls">number</span>  <span class="op">=</span> <span class="num">100</span>        <span class="cm">-- integer or float</span>
+<span class="kw">local</span> name<span class="op">:</span> <span class="cls">string</span>  <span class="op">=</span> <span class="str">"Roblox"</span>    <span class="cm">-- text</span>
+<span class="kw">local</span> alive<span class="op">:</span> <span class="cls">boolean</span> <span class="op">=</span> <span class="kw">true</span>       <span class="cm">-- true / false</span>
+<span class="kw">local</span> nothing        <span class="op">=</span> <span class="kw">nil</span>        <span class="cm">-- absence of value</span>
+
+<span class="cm">-- Roblox data types (not plain Lua)</span>
+<span class="kw">local</span> pos   <span class="op">=</span> <span class="cls">Vector3</span>.<span class="fn">new</span>(<span class="num">0</span>, <span class="num">5</span>, <span class="num">0</span>)
+<span class="kw">local</span> color <span class="op">=</span> <span class="cls">Color3</span>.<span class="fn">fromRGB</span>(<span class="num">255</span>, <span class="num">100</span>, <span class="num">0</span>)
+<span class="kw">local</span> cf    <span class="op">=</span> <span class="cls">CFrame</span>.<span class="fn">new</span>(<span class="num">0</span>, <span class="num">10</span>, <span class="num">0</span>)</pre>
+      </div>
+      <h3>Local vs Global</h3>
+      <div class="note warn">
+        <span class="note-icon">⚠️</span>
+        <div class="note-body"><strong>Always use <code>local</code>.</strong> Global variables are stored in a shared table (_G), are slower to access, and cause hard-to-track bugs. In Roblox scripts, globals also pollute the environment in unexpected ways.</div>
+      </div>
+      <div class="grid2">
+        <div>
+          <div class="grid2-label">✅ Good</div>
+          <div class="code-block">
+            <pre><span class="kw">local</span> speed <span class="op">=</span> <span class="num">16</span>
+<span class="kw">local</span> jump  <span class="op">=</span> <span class="num">50</span></pre>
+          </div>
+        </div>
+        <div>
+          <div class="grid2-label">❌ Avoid</div>
+          <div class="code-block">
+            <pre>speed <span class="op">=</span> <span class="num">16</span>   <span class="cm">-- global!</span>
+jump  <span class="op">=</span> <span class="num">50</span>   <span class="cm">-- global!</span></pre>
+          </div>
+        </div>
+      </div>
+      <h3>String Interpolation (Luau only)</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Template strings with backticks</span></div>
+        <pre><span class="kw">local</span> level <span class="op">=</span> <span class="num">42</span>
+<span class="kw">local</span> msg <span class="op">=</span> <span class="str">`You are level {level}!`</span>
+<span class="fn">print</span>(msg) <span class="cm">-- "You are level 42!"</span>
+
+<span class="cm">-- Compound assignment (Luau extension)</span>
+<span class="kw">local</span> coins <span class="op">=</span> <span class="num">10</span>
+coins <span class="op">+=</span> <span class="num">5</span>   <span class="cm">-- coins is now 15</span>
+coins <span class="op">*=</span> <span class="num">2</span>   <span class="cm">-- coins is now 30</span></pre>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" onclick="goLesson(0)">← Intro to Luau</button>
+        <button class="btn btn-primary" onclick="goLesson(2)">Control Flow →</button>
+      </div>
+    </div>
+
+    <!-- 2: Control Flow -->
+    <div class="lesson" id="lesson-2">
+      <div class="lesson-header">
+        <span class="lesson-num">03</span>
+        <div>
+          <div class="lesson-title">Control Flow</div>
+          <div class="lesson-sub">if/elseif/else, loops, and conditions</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">If/Else</span><span class="tag tag-b">Loops</span><span class="tag tag-g">Beginner</span>
+      </div>
+      <h3>Conditionals</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">if / elseif / else</span></div>
+        <pre><span class="kw">local</span> health <span class="op">=</span> <span class="num">75</span>
+
+<span class="kw">if</span> health <span class="op">>=</span> <span class="num">100</span> <span class="kw">then</span>
+    <span class="fn">print</span>(<span class="str">"Full HP"</span>)
+<span class="kw">elseif</span> health <span class="op">></span> <span class="num">50</span> <span class="kw">then</span>
+    <span class="fn">print</span>(<span class="str">"Healthy"</span>)
+<span class="kw">elseif</span> health <span class="op">></span> <span class="num">0</span> <span class="kw">then</span>
+    <span class="fn">print</span>(<span class="str">"Low HP — danger!"</span>)
+<span class="kw">else</span>
+    <span class="fn">print</span>(<span class="str">"Dead"</span>)
+<span class="kw">end</span></pre>
+      </div>
+      <div class="note">
+        <span class="note-icon">ℹ️</span>
+        <div class="note-body">In Lua, <strong>only <code>false</code> and <code>nil</code> are falsy</strong>. The number <code>0</code> and empty string <code>""</code> are <em>truthy</em> — the opposite of many other languages.</div>
+      </div>
+      <h3>Loops</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Three loop types</span></div>
+        <pre><span class="cm">-- Numeric for: start, stop, step (step defaults to 1)</span>
+<span class="kw">for</span> i <span class="op">=</span> <span class="num">1</span>, <span class="num">10</span> <span class="kw">do</span>
+    <span class="fn">print</span>(i)
+<span class="kw">end</span>
+
+<span class="cm">-- While loop</span>
+<span class="kw">local</span> count <span class="op">=</span> <span class="num">0</span>
+<span class="kw">while</span> count <span class="op"><</span> <span class="num">5</span> <span class="kw">do</span>
+    count <span class="op">+=</span> <span class="num">1</span>
+<span class="kw">end</span>
+
+<span class="cm">-- Repeat until (checks condition at the END)</span>
+<span class="kw">repeat</span>
+    count <span class="op">+=</span> <span class="num">1</span>
+<span class="kw">until</span> count <span class="op">>=</span> <span class="num">10</span>
+
+<span class="cm">-- break exits any loop</span>
+<span class="kw">for</span> i <span class="op">=</span> <span class="num">1</span>, <span class="num">100</span> <span class="kw">do</span>
+    <span class="kw">if</span> i <span class="op">==</span> <span class="num">5</span> <span class="kw">then</span> <span class="kw">break</span> <span class="kw">end</span>
+    <span class="fn">print</span>(i)
+<span class="kw">end</span></pre>
+      </div>
+      <h3>Logical Operators</h3>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Operator</th><th>Lua</th><th>Example</th></tr>
+          <tr><td>AND</td><td><code>and</code></td><td><code>alive and score > 0</code></td></tr>
+          <tr><td>OR</td><td><code>or</code></td><td><code>x == 1 or x == 2</code></td></tr>
+          <tr><td>NOT</td><td><code>not</code></td><td><code>not isDead</code></td></tr>
+          <tr><td>Not equal</td><td><code>~=</code></td><td><code>name ~= "Admin"</code></td></tr>
+        </table>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" onclick="goLesson(1)">← Variables & Types</button>
+        <button class="btn btn-primary" onclick="goLesson(3)">Functions →</button>
+      </div>
+    </div>
+
+    <!-- 3: Functions -->
+    <div class="lesson" id="lesson-3">
+      <div class="lesson-header">
+        <span class="lesson-num">04</span>
+        <div>
+          <div class="lesson-title">Functions</div>
+          <div class="lesson-sub">Defining, calling, and passing functions</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">Functions</span><span class="tag tag-b">Closures</span><span class="tag tag-g">Beginner</span>
+      </div>
+      <h3>Defining Functions</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Function syntax forms</span></div>
+        <pre><span class="cm">-- Standard declaration</span>
+<span class="kw">local function</span> <span class="fn">greet</span>(name<span class="op">:</span> <span class="cls">string</span>)<span class="op">:</span> <span class="cls">string</span>
+    <span class="kw">return</span> <span class="str">"Hello, "</span> <span class="op">..</span> name
+<span class="kw">end</span>
+
+<span class="cm">-- Function stored in a variable</span>
+<span class="kw">local</span> double <span class="op">=</span> <span class="kw">function</span>(x)
+    <span class="kw">return</span> x <span class="op">*</span> <span class="num">2</span>
+<span class="kw">end</span>
+
+<span class="cm">-- Multiple return values</span>
+<span class="kw">local function</span> <span class="fn">minMax</span>(a, b)
+    <span class="kw">return</span> <span class="fn">math.min</span>(a, b), <span class="fn">math.max</span>(a, b)
+<span class="kw">end</span>
+
+<span class="kw">local</span> lo, hi <span class="op">=</span> <span class="fn">minMax</span>(<span class="num">3</span>, <span class="num">7</span>)
+<span class="fn">print</span>(lo, hi) <span class="cm">-- 3   7</span></pre>
+      </div>
+      <h3>Variadic Functions</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Accepting any number of arguments</span></div>
+        <pre><span class="kw">local function</span> <span class="fn">sum</span>(<span class="op">...</span>)
+    <span class="kw">local</span> total <span class="op">=</span> <span class="num">0</span>
+    <span class="kw">for</span> _, v <span class="kw">in</span> {<span class="op">...</span>} <span class="kw">do</span>
+        total <span class="op">+=</span> v
+    <span class="kw">end</span>
+    <span class="kw">return</span> total
+<span class="kw">end</span>
+
+<span class="fn">print</span>(<span class="fn">sum</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>)) <span class="cm">-- 10</span></pre>
+      </div>
+      <h3>Functions as Values (Callbacks)</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Passing functions — used heavily in Roblox events</span></div>
+        <pre><span class="cm">-- Roblox events use function callbacks</span>
+<span class="kw">local</span> part <span class="op">=</span> workspace.<span class="prop">Part</span>
+
+part.<span class="prop">Touched</span><span class="op">:</span><span class="fn">Connect</span>(<span class="kw">function</span>(hit)
+    <span class="fn">print</span>(hit.<span class="prop">Name</span> <span class="op">..</span> <span class="str">" touched the part!"</span>)
+<span class="kw">end</span>)</pre>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" onclick="goLesson(2)">← Control Flow</button>
+        <button class="btn btn-primary" onclick="goLesson(4)">Tables & Arrays →</button>
+      </div>
+    </div>
+
+    <!-- 4: Tables -->
+    <div class="lesson" id="lesson-4">
+      <div class="lesson-header">
+        <span class="lesson-num">05</span>
+        <div>
+          <div class="lesson-title">Tables & Arrays</div>
+          <div class="lesson-sub">Lua's only data structure — used for everything</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">Tables</span><span class="tag tag-b">Arrays</span><span class="tag tag-y">Important</span>
+      </div>
+      <p>In Lua, <strong>tables are the single universal data structure</strong>. They serve as arrays, dictionaries, objects, and modules all at once.</p>
+      <h3>Arrays (Sequential Tables)</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Tables as arrays — index starts at 1!</span></div>
+        <pre><span class="kw">local</span> fruits <span class="op">=</span> {<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>}
+
+<span class="fn">print</span>(fruits[<span class="num">1</span>]) <span class="cm">-- "apple"  (NOT 0!)</span>
+<span class="fn">print</span>(<span class="op">#</span>fruits)   <span class="cm">-- 3  (length operator)</span>
+
+<span class="cm">-- Add to end</span>
+<span class="fn">table.insert</span>(fruits, <span class="str">"date"</span>)
+
+<span class="cm">-- Remove at index</span>
+<span class="fn">table.remove</span>(fruits, <span class="num">2</span>) <span class="cm">-- removes "banana"</span>
+
+<span class="cm">-- Iterate with ipairs (ordered, stops at nil)</span>
+<span class="kw">for</span> i, fruit <span class="kw">in</span> <span class="fn">ipairs</span>(fruits) <span class="kw">do</span>
+    <span class="fn">print</span>(i, fruit)
+<span class="kw">end</span></pre>
+      </div>
+      <h3>Dictionaries (Key-Value Tables)</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">String-keyed tables</span></div>
+        <pre><span class="kw">local</span> player <span class="op">=</span> {
+    name   <span class="op">=</span> <span class="str">"Swordsman99"</span>,
+    level  <span class="op">=</span> <span class="num">15</span>,
+    coins  <span class="op">=</span> <span class="num">320</span>,
+    alive  <span class="op">=</span> <span class="kw">true</span>,
+}
+
+<span class="cm">-- Access with dot or bracket notation</span>
+<span class="fn">print</span>(player.<span class="prop">name</span>)           <span class="cm">-- "Swordsman99"</span>
+<span class="fn">print</span>(player[<span class="str">"level"</span>])       <span class="cm">-- 15</span>
+
+<span class="cm">-- Add a field</span>
+player.<span class="prop">guild</span> <span class="op">=</span> <span class="str">"Warriors"</span>
+
+<span class="cm">-- Iterate with pairs (unordered)</span>
+<span class="kw">for</span> key, value <span class="kw">in</span> <span class="fn">pairs</span>(player) <span class="kw">do</span>
+    <span class="fn">print</span>(key, <span class="str">"="</span>, value)
+<span class="kw">end</span></pre>
+      </div>
+      <div class="note tip">
+        <span class="note-icon">💡</span>
+        <div class="note-body"><strong>ipairs vs pairs:</strong> Use <code>ipairs</code> for arrays (stops at first nil, respects order). Use <code>pairs</code> for dictionaries (visits all keys, random order).</div>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" onclick="goLesson(3)">← Functions</button>
+        <button class="btn btn-primary" onclick="goLesson(5)">Services & API →</button>
+      </div>
+    </div>
+
+    <!-- 5: Services -->
+    <div class="lesson" id="lesson-5">
+      <div class="lesson-header">
+        <span class="lesson-num">06</span>
+        <div>
+          <div class="lesson-title">Services & Roblox API</div>
+          <div class="lesson-sub">Accessing Roblox's built-in systems</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">Services</span><span class="tag tag-b">API</span><span class="tag tag-y">Core</span>
+      </div>
+      <p>Roblox provides <strong>services</strong> — singleton objects that expose functionality. You get them with <code>game:GetService()</code>. Never access them via long dot chains like <code>game.Players</code> in production — use GetService for reliability.</p>
+      <h3>Essential Services</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Accessing common services</span></div>
+        <pre><span class="kw">local</span> Players       <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"Players"</span>)
+<span class="kw">local</span> RunService    <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"RunService"</span>)
+<span class="kw">local</span> TweenService  <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"TweenService"</span>)
+<span class="kw">local</span> DataStore     <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"DataStoreService"</span>)
+<span class="kw">local</span> ReplicatedStorage <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"ReplicatedStorage"</span>)
+<span class="kw">local</span> ServerStorage <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"ServerStorage"</span>)
+<span class="kw">local</span> UserInputService <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"UserInputService"</span>)</pre>
+      </div>
+      <h3>Key Services Quick Reference</h3>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Service</th><th>What it does</th><th>Where</th></tr>
+          <tr><td><code>Players</code></td><td>Player list, player added/removed events</td><td>Server + Client</td></tr>
+          <tr><td><code>RunService</code></td><td>Heartbeat, RenderStepped, Stepped loops</td><td>Server + Client</td></tr>
+          <tr><td><code>TweenService</code></td><td>Animate properties over time</td><td>Server + Client</td></tr>
+          <tr><td><code>DataStoreService</code></td><td>Persistent save/load data</td><td>Server only</td></tr>
+          <tr><td><code>UserInputService</code></td><td>Keyboard, mouse, touch input</td><td>Client only</td></tr>
+          <tr><td><code>ReplicatedStorage</code></td><td>Shared objects (RemoteEvents etc.)</td><td>Both</td></tr>
+          <tr><td><code>ServerStorage</code></td><td>Server-only assets (invisible to client)</td><td>Server only</td></tr>
+          <tr><td><code>Lighting</code></td><td>Sky, atmosphere, visual effects</td><td>Both</td></tr>
+        </table>
+      </div>
+      <h3>Navigating the Hierarchy</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Finding objects</span></div>
+        <pre><span class="cm">-- Direct child</span>
+<span class="kw">local</span> part <span class="op">=</span> workspace.<span class="prop">MyPart</span>
+
+<span class="cm">-- WaitForChild — safe for LocalScripts (async load)</span>
+<span class="kw">local</span> part <span class="op">=</span> workspace<span class="op">:</span><span class="fn">WaitForChild</span>(<span class="str">"MyPart"</span>)
+
+<span class="cm">-- FindFirstChild — returns nil if not found (safe)</span>
+<span class="kw">local</span> part <span class="op">=</span> workspace<span class="op">:</span><span class="fn">FindFirstChild</span>(<span class="str">"MyPart"</span>)
+<span class="kw">if</span> part <span class="kw">then</span>
+    <span class="fn">print</span>(<span class="str">"Found: "</span> <span class="op">..</span> part.<span class="prop">Name</span>)
+<span class="kw">end</span></pre>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" onclick="goLesson(4)">← Tables & Arrays</button>
+        <button class="btn btn-primary" onclick="goLesson(6)">Players & Characters →</button>
+      </div>
+    </div>
+
+    <!-- 6: Players -->
+    <div class="lesson" id="lesson-6">
+      <div class="lesson-header">
+        <span class="lesson-num">07</span>
+        <div>
+          <div class="lesson-title">Players & Characters</div>
+          <div class="lesson-sub">Detecting joins, accessing humanoids & parts</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">Players</span><span class="tag tag-b">Humanoid</span><span class="tag tag-y">Core</span>
+      </div>
+      <h3>Player Joined / Left</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">ServerScript — player lifecycle</span></div>
+        <pre><span class="kw">local</span> Players <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"Players"</span>)
+
+Players.<span class="prop">PlayerAdded</span><span class="op">:</span><span class="fn">Connect</span>(<span class="kw">function</span>(player)
+    <span class="fn">print</span>(player.<span class="prop">Name</span> <span class="op">..</span> <span class="str">" joined!"</span>)
+
+    <span class="cm">-- Character may load AFTER PlayerAdded fires</span>
+    player.<span class="prop">CharacterAdded</span><span class="op">:</span><span class="fn">Connect</span>(<span class="kw">function</span>(character)
+        <span class="kw">local</span> humanoid <span class="op">=</span> character<span class="op">:</span><span class="fn">WaitForChild</span>(<span class="str">"Humanoid"</span>)
+        <span class="fn">print</span>(player.<span class="prop">Name</span> <span class="op">..</span> <span class="str">" spawned with "</span> <span class="op">..</span> humanoid.<span class="prop">MaxHealth</span> <span class="op">..</span> <span class="str">" HP"</span>)
+    <span class="kw">end</span>)
+<span class="kw">end</span>)
+
+Players.<span class="prop">PlayerRemoving</span><span class="op">:</span><span class="fn">Connect</span>(<span class="kw">function</span>(player)
+    <span class="fn">print</span>(player.<span class="prop">Name</span> <span class="op">..</span> <span class="str">" left."</span>)
+<span class="kw">end</span>)</pre>
+      </div>
+      <h3>Humanoid Properties</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Working with Humanoid</span></div>
+        <pre><span class="kw">local</span> character <span class="op">=</span> player.<span class="prop">Character</span>
+<span class="kw">local</span> humanoid  <span class="op">=</span> character<span class="op">:</span><span class="fn">FindFirstChildOfClass</span>(<span class="str">"Humanoid"</span>)
+<span class="kw">local</span> hrp       <span class="op">=</span> character<span class="op">:</span><span class="fn">FindFirstChild</span>(<span class="str">"HumanoidRootPart"</span>)
+
+<span class="cm">-- Common Humanoid properties</span>
+humanoid.<span class="prop">Health</span>           <span class="cm">-- current HP</span>
+humanoid.<span class="prop">MaxHealth</span>        <span class="cm">-- max HP (default 100)</span>
+humanoid.<span class="prop">WalkSpeed</span>        <span class="cm">-- movement speed (default 16)</span>
+humanoid.<span class="prop">JumpPower</span>        <span class="cm">-- jump height (default 50)</span>
+
+<span class="cm">-- Take damage</span>
+humanoid<span class="op">:</span><span class="fn">TakeDamage</span>(<span class="num">25</span>)
+
+<span class="cm">-- Death event</span>
+humanoid.<span class="prop">Died</span><span class="op">:</span><span class="fn">Connect</span>(<span class="kw">function</span>()
+    <span class="fn">print</span>(player.<span class="prop">Name</span> <span class="op">..</span> <span class="str">" died!"</span>)
+<span class="kw">end</span>)</pre>
+      </div>
+      <div class="note tip">
+        <span class="note-icon">💡</span>
+        <div class="note-body"><strong>HumanoidRootPart</strong> is the invisible part at the character's center. Use its <code>CFrame</code> or <code>Position</code> to teleport or track the player's world position.</div>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" onclick="goLesson(5)">← Services & API</button>
+        <button class="btn btn-primary" onclick="goLesson(7)">Remote Events →</button>
+      </div>
+    </div>
+
+    <!-- 7: Remote Events -->
+    <div class="lesson" id="lesson-7">
+      <div class="lesson-header">
+        <span class="lesson-num">08</span>
+        <div>
+          <div class="lesson-title">Remote Events & Functions</div>
+          <div class="lesson-sub">Client ↔ Server communication</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">RemoteEvent</span><span class="tag tag-b">Networking</span><span class="tag tag-y">Important</span>
+      </div>
+      <p>The server and client run in <strong>separate sandboxes</strong>. To communicate between them you use <strong>RemoteEvents</strong> (fire-and-forget) and <strong>RemoteFunctions</strong> (request/response). Both live in <code>ReplicatedStorage</code> so both sides can access them.</p>
+      <h3>Setup</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Create in Studio — then reference in scripts</span></div>
+        <pre><span class="cm">-- In ServerScript OR ServerScriptService setup script:</span>
+<span class="kw">local</span> RS <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"ReplicatedStorage"</span>)
+
+<span class="kw">local</span> evt <span class="op">=</span> <span class="cls">Instance</span>.<span class="fn">new</span>(<span class="str">"RemoteEvent"</span>)
+evt.<span class="prop">Name</span> <span class="op">=</span> <span class="str">"CoinCollected"</span>
+evt.<span class="prop">Parent</span> <span class="op">=</span> RS</pre>
+      </div>
+      <h3>Firing Client → Server</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">LocalScript fires; Script receives</span></div>
+        <pre><span class="cm">-- LocalScript (client)</span>
+<span class="kw">local</span> RS  <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"ReplicatedStorage"</span>)
+<span class="kw">local</span> evt <span class="op">=</span> RS<span class="op">:</span><span class="fn">WaitForChild</span>(<span class="str">"CoinCollected"</span>)
+
+evt<span class="op">:</span><span class="fn">FireServer</span>(<span class="num">50</span>)  <span class="cm">-- send coin value to server</span>
+
+<span class="cm">-- ──────────────────────────────────────────</span>
+<span class="cm">-- Script (server)</span>
+<span class="kw">local</span> RS  <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"ReplicatedStorage"</span>)
+<span class="kw">local</span> evt <span class="op">=</span> RS<span class="op">:</span><span class="fn">WaitForChild</span>(<span class="str">"CoinCollected"</span>)
+
+evt.<span class="prop">OnServerEvent</span><span class="op">:</span><span class="fn">Connect</span>(<span class="kw">function</span>(player, coinValue)
+    <span class="fn">print</span>(player.<span class="prop">Name</span>, <span class="str">"collected"</span>, coinValue, <span class="str">"coins"</span>)
+    <span class="cm">-- update player's leaderstats here</span>
+<span class="kw">end</span>)</pre>
+      </div>
+      <h3>Firing Server → Client</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Server fires; LocalScript receives</span></div>
+        <pre><span class="cm">-- Script (server) — fire one player</span>
+evt<span class="op">:</span><span class="fn">FireClient</span>(player, <span class="str">"You got 50 coins!"</span>)
+
+<span class="cm">-- Script (server) — fire everyone</span>
+evt<span class="op">:</span><span class="fn">FireAllClients</span>(<span class="str">"Server message to all"</span>)
+
+<span class="cm">-- LocalScript (client)</span>
+evt.<span class="prop">OnClientEvent</span><span class="op">:</span><span class="fn">Connect</span>(<span class="kw">function</span>(msg)
+    <span class="fn">print</span>(msg)
+<span class="kw">end</span>)</pre>
+      </div>
+      <div class="note warn">
+        <span class="note-icon">⚠️</span>
+        <div class="note-body"><strong>Never trust the client.</strong> Always validate data on the server side. A hacker can fire RemoteEvents with any arguments they want, so never do important game logic based purely on client input.</div>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" onclick="goLesson(6)">← Players & Characters</button>
+        <button class="btn btn-primary" onclick="goLesson(8)">Coroutines & Tasks →</button>
+      </div>
+    </div>
+
+    <!-- 8: Coroutines -->
+    <div class="lesson" id="lesson-8">
+      <div class="lesson-header">
+        <span class="lesson-num">09</span>
+        <div>
+          <div class="lesson-title">Coroutines & task Library</div>
+          <div class="lesson-sub">Async code, delays, and parallel execution</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">task</span><span class="tag tag-b">Coroutines</span><span class="tag tag-y">Advanced</span>
+      </div>
+      <p>Roblox scripts are single-threaded, but you can simulate concurrency with <strong>coroutines</strong> and the <strong>task</strong> library. The <code>task</code> library is Roblox's preferred replacement for the older <code>wait()</code> and <code>spawn()</code> functions.</p>
+      <h3>task Library (Preferred)</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Modern async with task.*</span></div>
+        <pre><span class="cm">-- Delay execution (non-blocking)</span>
+<span class="fn">task.delay</span>(<span class="num">2</span>, <span class="kw">function</span>()
+    <span class="fn">print</span>(<span class="str">"Runs 2 seconds later"</span>)
+<span class="kw">end</span>)
+
+<span class="cm">-- Run on next frame (non-blocking)</span>
+<span class="fn">task.spawn</span>(<span class="kw">function</span>()
+    <span class="fn">print</span>(<span class="str">"Runs immediately in a new thread"</span>)
+<span class="kw">end</span>)
+
+<span class="cm">-- Wait (yields current thread)</span>
+<span class="fn">task.wait</span>(<span class="num">1</span>)
+<span class="fn">print</span>(<span class="str">"After 1 second"</span>)
+
+<span class="cm">-- Run on next Heartbeat</span>
+<span class="fn">task.defer</span>(<span class="kw">function</span>()
+    <span class="fn">print</span>(<span class="str">"Deferred to end of frame"</span>)
+<span class="kw">end</span>)</pre>
+      </div>
+      <h3>Coroutines</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Low-level coroutine control</span></div>
+        <pre><span class="kw">local</span> co <span class="op">=</span> coroutine.<span class="fn">create</span>(<span class="kw">function</span>()
+    <span class="fn">print</span>(<span class="str">"step 1"</span>)
+    coroutine.<span class="fn">yield</span>()   <span class="cm">-- pause here</span>
+    <span class="fn">print</span>(<span class="str">"step 2"</span>)
+<span class="kw">end</span>)
+
+coroutine.<span class="fn">resume</span>(co) <span class="cm">-- prints "step 1"</span>
+coroutine.<span class="fn">resume</span>(co) <span class="cm">-- prints "step 2"</span>
+
+<span class="cm">-- coroutine.wrap is a cleaner shorthand</span>
+<span class="kw">local</span> gen <span class="op">=</span> coroutine.<span class="fn">wrap</span>(<span class="kw">function</span>()
+    <span class="kw">for</span> i <span class="op">=</span> <span class="num">1</span>, <span class="num">3</span> <span class="kw">do</span>
+        coroutine.<span class="fn">yield</span>(i)
+    <span class="kw">end</span>
+<span class="kw">end</span>)
+<span class="fn">print</span>(<span class="fn">gen</span>()) <span class="cm">-- 1</span>
+<span class="fn">print</span>(<span class="fn">gen</span>()) <span class="cm">-- 2</span></pre>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Old (avoid)</th><th>New (use)</th></tr>
+          <tr><td><code>wait(n)</code></td><td><code>task.wait(n)</code></td></tr>
+          <tr><td><code>spawn(fn)</code></td><td><code>task.spawn(fn)</code></td></tr>
+          <tr><td><code>delay(n, fn)</code></td><td><code>task.delay(n, fn)</code></td></tr>
+        </table>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" onclick="goLesson(7)">← Remote Events</button>
+        <button class="btn btn-primary" onclick="goLesson(9)">OOP & Modules →</button>
+      </div>
+    </div>
+
+    <!-- 9: OOP -->
+    <div class="lesson" id="lesson-9">
+      <div class="lesson-header">
+        <span class="lesson-num">10</span>
+        <div>
+          <div class="lesson-title">OOP & ModuleScripts</div>
+          <div class="lesson-sub">Classes, metatables, and reusable modules</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag tag-r">OOP</span><span class="tag tag-b">Metatables</span><span class="tag tag-y">Advanced</span>
+      </div>
+      <p>Lua doesn't have built-in classes, but you can implement OOP using <strong>metatables</strong>. This is the standard pattern used in most serious Roblox projects.</p>
+      <h3>Creating a Class</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">ModuleScript: Enemy class</span></div>
+        <pre><span class="cm">-- ModuleScript: Enemy</span>
+<span class="kw">local</span> Enemy <span class="op">=</span> {}
+Enemy.__index <span class="op">=</span> Enemy
+
+<span class="kw">function</span> Enemy.<span class="fn">new</span>(name<span class="op">:</span> <span class="cls">string</span>, health<span class="op">:</span> <span class="cls">number</span>)
+    <span class="kw">local</span> self <span class="op">=</span> <span class="fn">setmetatable</span>({}, Enemy)
+    self.<span class="prop">name</span>   <span class="op">=</span> name
+    self.<span class="prop">health</span> <span class="op">=</span> health
+    <span class="kw">return</span> self
+<span class="kw">end</span>
+
+<span class="kw">function</span> Enemy<span class="op">:</span><span class="fn">TakeDamage</span>(amount<span class="op">:</span> <span class="cls">number</span>)
+    self.<span class="prop">health</span> <span class="op">-=</span> amount
+    <span class="kw">if</span> self.<span class="prop">health</span> <span class="op"><=</span> <span class="num">0</span> <span class="kw">then</span>
+        <span class="fn">print</span>(self.<span class="prop">name</span> <span class="op">..</span> <span class="str">" defeated!"</span>)
+    <span class="kw">end</span>
+<span class="kw">end</span>
+
+<span class="kw">function</span> Enemy<span class="op">:</span><span class="fn">GetHealth</span>()<span class="op">:</span> <span class="cls">number</span>
+    <span class="kw">return</span> self.<span class="prop">health</span>
+<span class="kw">end</span>
+
+<span class="kw">return</span> Enemy</pre>
+      </div>
+      <h3>Using the Module</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">ServerScript — requiring a module</span></div>
+        <pre><span class="kw">local</span> RS    <span class="op">=</span> game<span class="op">:</span><span class="fn">GetService</span>(<span class="str">"ServerStorage"</span>)
+<span class="kw">local</span> Enemy <span class="op">=</span> <span class="fn">require</span>(RS.<span class="prop">Enemy</span>)
+
+<span class="kw">local</span> boss <span class="op">=</span> Enemy.<span class="fn">new</span>(<span class="str">"Dragon Boss"</span>, <span class="num">500</span>)
+boss<span class="op">:</span><span class="fn">TakeDamage</span>(<span class="num">150</span>)
+<span class="fn">print</span>(boss<span class="op">:</span><span class="fn">GetHealth</span>()) <span class="cm">-- 350</span></pre>
+      </div>
+      <h3>Inheritance Pattern</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">LUAU</span><span class="code-desc">Extending a base class</span></div>
+        <pre><span class="kw">local</span> BossEnemy <span class="op">=</span> <span class="fn">setmetatable</span>({}, {__index <span class="op">=</span> Enemy})
+BossEnemy.__index <span class="op">=</span> BossEnemy
+
+<span class="kw">function</span> BossEnemy.<span class="fn">new</span>(name, health, phase)
+    <span class="kw">local</span> self <span class="op">=</span> Enemy.<span class="fn">new</span>(name, health)  <span class="cm">-- call super</span>
+    <span class="kw">return</span> <span class="fn">setmetatable</span>(self, BossEnemy)
+<span class="kw">end</span>
+
+<span class="kw">function</span> BossEnemy<span class="op">:</span><span class="fn">Roar</span>()
+    <span class="fn">print</span>(self.<span class="prop">name</span> <span class="op">..</span> <span class="str">" ROARS!"</span>)
+<span class="kw">end</span>
+
+<span class="kw">return</span> BossEnemy</pre>
+      </div>
+      <div class="note tip">
+        <span class="note-icon">💡</span>
+        <div class="note-body"><strong>Module caching:</strong> <code>require()</code> caches its result. The second call to <code>require()</code> on the same module returns the exact same table — no re-execution. This makes modules perfect for shared state within one environment (server or client).</div>
+      </div>
+      <div class="lesson-nav">
+        <button class="btn btn-ghost" onclick="goLesson(8)">← Coroutines & Tasks</button>
+        <button class="btn btn-primary" disabled>✅ Course Complete!</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const TOTAL = 10;
+  let visited = new Set();
+
+  function goLesson(idx) {
+    // Hide all
+    document.querySelectorAll('.lesson').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+    // Show target
+    document.getElementById('lesson-' + idx).classList.add('active');
+    const navItem = document.querySelector(`.nav-item[data-lesson="${idx}"]`);
+    navItem.classList.add('active');
+
+    // Mark visited
+    visited.add(idx);
+    updateProgress();
+
+    // Scroll to top
+    document.getElementById('main').scrollTop = 0;
+  }
+
+  function updateProgress() {
+    const pct = Math.round((visited.size / TOTAL) * 100);
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('prog-label').textContent = visited.size + ' / ' + TOTAL;
+
+    // Mark done in nav
+    visited.forEach(i => {
+      const ni = document.querySelector(`.nav-item[data-lesson="${i}"]`);
+      if (ni) ni.classList.add('done-item');
+    });
+  }
+
+  // Nav clicks
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      goLesson(parseInt(item.dataset.lesson));
+    });
+  });
+
+  // Mark lesson 0 as visited on load
+  visited.add(0);
+  updateProgress();
+</script>
+</body>
+</html>
